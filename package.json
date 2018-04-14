@@ -1,0 +1,12 @@
+{
+  "name": "verbose-telegram",
+  "version": "0.0.1",
+  "description": "A serverless app that performs sentiment analysis on Trump tweets",
+  "repository": "git@github.com:dhagerty9009/verbose-telegram.git",
+  "author": "David Hagerty <hagerty9009@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "dependencies": {
+    "twitter": "^1.7.1"
+  }
+}
