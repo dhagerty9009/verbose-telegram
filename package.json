@@ -8,11 +8,12 @@
   "private": false,
   "dependencies": {
     "@google-cloud/language": "^1.2.0",
+    "@google-cloud/storage": "^1.6.0",
     "cloud-functions-runtime-config": "^0.4.0",
     "global": "^4.3.2",
-    "twitter": "^1.7.1"
+    "npm": "^5.8.0",
+    "twitter": "^1.7.1",
+    "valid-url": "^1.0.9"
   },
-  "devDependencies": {
-    "eslint-plugin-import": "^2.11.0"
-  }
+  "devDependencies": {}
 }

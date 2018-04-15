@@ -1,6 +1,7 @@
 const runtimeConfig = require("cloud-functions-runtime-config");
 const Twitter = require("twitter");
-// const language = require("@google-cloud/language");
+const language = require("@google-cloud/language");
+const languageClient = new language.LanguageServiceClient();
 const twitterApiKey = runtimeConfig.getVariable(
   "external-apis",
   "twitter_consumer_key"
@@ -25,7 +26,6 @@ let twitterApiKeyValue,
 function setApiKey(response) {
   return twitterApiKey
     .then(val => {
-      console.log(val);
       twitterApiKeyValue = twitterApiKeyValue || val;
     })
     .catch(err => {
@@ -37,7 +37,6 @@ function setApiKey(response) {
 function setApiSecret(response) {
   return twitterApiSecret
     .then(val => {
-      console.log(val);
       twitterApiSecretValue = twitterApiSecretValue || val;
     })
     .catch(err => {
@@ -49,7 +48,6 @@ function setApiSecret(response) {
 function setAccessKey(response) {
   return twitterAccessKey
     .then(val => {
-      console.log(val);
       twitterAccessKeyValue = twitterAccessKeyValue || val;
     })
     .catch(err => {
@@ -61,7 +59,6 @@ function setAccessKey(response) {
 function setAccessSecret(response) {
   return twitterAccessSecret
     .then(val => {
-      console.log(val);
       twitterAccessSecretValue = twitterAccessSecretValue || val;
     })
     .catch(err => {
@@ -70,22 +67,38 @@ function setAccessSecret(response) {
     });
 }
 
-function parseTweets(tweets) {
-  var parsed = [];
-  for (var i = 0; i < tweets.length; i++) {
-    parsed[i] = JSON.parse(tweets[i]);
-  }
-  return parsed;
-}
-
 function getText(tweets) {
+  var validURL = require("valid-url");
   var texts = [];
   for (var i = 0; i < tweets.length; i++) {
     var text = tweets[i].full_text;
-    if () {}
-    texts[i] = text;
+    if (!validURL.isUri(text)) {
+      texts[i] = text;
+    }
   }
   return texts;
+}
+
+function getAnalysis(tweet) {
+  var output = [];
+  if (tweet != null) {
+    const document = {
+      content: tweet,
+      type: "PLAIN_TEXT"
+    };
+    languageClient
+      .analyzeSentiment({ document: document })
+      .then(results => {
+        const sentiment = results[0].documentSentiment;
+        output[0] = sentiment.score;
+        output[1] = tweet;
+        console.log("Intermediate result: ", output);
+        return output;
+      })
+      .catch(err => {
+        console.error("ERROR:", err);
+      });
+  }
 }
 
 exports.getTweets = (request, response) => {
@@ -93,7 +106,6 @@ exports.getTweets = (request, response) => {
   setApiSecret(response);
   setAccessKey(response);
   setAccessSecret(response);
-  var tweetIDs;
   var client = new Twitter({
     consumer_key: twitterApiKeyValue,
     consumer_secret: twitterApiSecretValue,
@@ -107,9 +119,10 @@ exports.getTweets = (request, response) => {
       tweet_mode: "extended"
     })
     .then(tweets => {
-      var parsedTweets = parseTweets(tweets);
-      console.log(parsedTweets);
-      response.status(200).send(tweets);
+      var tweetTexts = getText(tweets);
+      analysisData = tweetTexts.map(getAnalysis);
+      console.log("Final result: ", analysisData);
+      response.status(200).send(analysisData);
     })
     .catch(error => {
       console.log(error);
